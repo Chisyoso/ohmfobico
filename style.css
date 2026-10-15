@@ -151,3 +151,179 @@ h1 {
         font-size: 38px;
     }
 }
+
+/* Página de información: Ley de Ohm */
+.teoria {
+    max-width: 1100px;
+    padding: 35px 0;
+    text-align: left;
+}
+.encabezado {
+    text-align: center;
+    margin-bottom: 35px;
+}
+.volver {
+    display: inline-block;
+    color: #7dd3fc;
+    text-decoration: none;
+    margin-bottom: 25px;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+.volver:hover {
+    color: white;
+    transform: translateX(-4px);
+}
+.seccion {
+    padding: 25px;
+    margin-bottom: 22px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+.seccion h2 {
+    color: #7dd3fc;
+    margin-bottom: 18px;
+    font-size: 25px;
+}
+.seccion p {
+    line-height: 1.8;
+    margin-bottom: 14px;
+    color: #e0e7ef;
+}
+.magnitudes,
+.formulas {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 20px;
+}
+.tarjeta {
+    padding: 20px;
+    border-radius: 15px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: transform 0.25s ease, background 0.25s ease;
+}
+.tarjeta:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.12);
+}
+.tarjeta h3,
+.ejemplo h3 {
+    color: #7dd3fc;
+    margin-bottom: 12px;
+}
+.tarjeta p {
+    font-size: 15px;
+}
+.simbolo {
+    font-size: 35px;
+    font-weight: bold;
+    color: #7dd3fc !important;
+}
+.formula {
+    padding: 25px;
+    margin: 20px 0;
+    text-align: center;
+    border-radius: 15px;
+    background: rgba(125, 211, 252, 0.10);
+    border: 1px solid rgba(125, 211, 252, 0.35);
+    color: #7dd3fc;
+    font-size: 36px;
+    font-weight: bold;
+}
+.formula-pequena {
+    color: #7dd3fc !important;
+    font-size: 24px !important;
+    font-weight: bold;
+}
+.circuito {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 25px 10px;
+    margin: 20px 0;
+    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.18);
+}
+.componente {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+.simbolo-circuito {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 55px;
+    height: 55px;
+    border-radius: 12px;
+    border: 1px solid #7dd3fc;
+    color: #7dd3fc;
+    font-size: 25px;
+    font-weight: bold;
+}
+.componente small {
+    color: #bfc7d5;
+}
+.linea {
+    color: #7dd3fc;
+    font-weight: bold;
+}
+.ejemplo {
+    padding: 20px;
+    margin: 18px 0;
+    border-left: 3px solid #7dd3fc;
+    border-radius: 5px 12px 12px 5px;
+    background: rgba(255, 255, 255, 0.04);
+}
+.resultado {
+    color: #7dd3fc !important;
+    font-weight: bold;
+}
+.lista {
+    padding-left: 25px;
+    color: #e0e7ef;
+    line-height: 1.9;
+}
+.lista li {
+    margin-bottom: 10px;
+}
+.pie {
+    text-align: center;
+    padding: 25px 10px;
+    color: #bfc7d5;
+}
+.pie p {
+    margin-bottom: 15px;
+}
+/* Adaptación a pantallas pequeñas */
+@media (max-width: 750px) {
+    .teoria {
+        width: 92%;
+        padding: 25px 0;
+    }
+    .magnitudes,
+    .formulas {
+        grid-template-columns: 1fr;
+    }
+    .seccion {
+        padding: 20px;
+    }
+    .seccion h2 {
+        font-size: 22px;
+    }
+    .formula {
+        font-size: 30px;
+    }
+    .circuito {
+        gap: 8px;
+    }
+    .linea {
+        font-size: 12px;
+    }
+}

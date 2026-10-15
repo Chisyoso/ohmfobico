@@ -3,154 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>omhfobico</title>
-
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            min-height: 100vh;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #101820, #1b2a41);
-            color: white;
-
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .contenedor {
-            width: 90%;
-            max-width: 1000px;
-            text-align: center;
-        }
-
-        h1 {
-            font-size: 42px;
-            margin-bottom: 10px;
-        }
-
-        .descripcion {
-            color: #bfc7d5;
-            margin-bottom: 40px;
-            font-size: 17px;
-        }
-
-        .opciones {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            flex-wrap: wrap;
-        }
-
-        .boton {
-            width: 260px;
-            padding: 20px;
-            border-radius: 20px;
-
-            background: rgba(255, 255, 255, 0.08);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-
-            text-decoration: none;
-            color: white;
-
-            transition:
-                transform 0.25s ease,
-                background 0.25s ease,
-                box-shadow 0.25s ease;
-        }
-
-        .boton img {
-            width: 100px;
-            height: 100px;
-            object-fit: cover;
-            border-radius: 15px;
-            margin-bottom: 15px;
-
-            transition: transform 0.25s ease;
-        }
-
-        .boton h2 {
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-
-        .boton p {
-            color: #bfc7d5;
-            font-size: 14px;
-        }
-
-        /* Animación al pasar el cursor */
-        .boton:hover {
-            transform: translateY(-10px) scale(1.03);
-            background: rgba(255, 255, 255, 0.14);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.35);
-        }
-
-        .boton:hover img {
-            transform: scale(1.08) rotate(2deg);
-        }
-
-        /* Animación al tocar/presionar */
-        .boton:active {
-            transform: scale(0.94);
-            transition: transform 0.08s;
-        }
-
-        .boton:active img {
-            transform: scale(0.92);
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 32px;
-            }
-
-            .boton {
-                width: 90%;
-                max-width: 300px;
-            }
-        }
-    </style>
+    <title>OHMFÓBICO</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
     <main class="contenedor">
-
-        <h1>omhfobico</h1>
-
+        <h1>OHMFÓBICO</h1>
         <p class="descripcion">
             Selecciona una de las siguientes opciones
         </p>
-
         <div class="opciones">
-
             <a href="inform.html" class="boton">
                 <img src="icon.png" alt="Información">
                 <h2>Información</h2>
-                <p>Consulta toda la información.</p>
+                <p>
+                    Consulta toda la información del proyecto.
+                </p>
             </a>
-
             <a href="prac.html" class="boton">
                 <img src="icon2.png" alt="Práctica">
                 <h2>Práctica</h2>
-                <p>Accede a la sección práctica.</p>
+                <p>
+                    Accede a la sección práctica.
+                </p>
             </a>
-
             <a href="desa.html" class="boton">
                 <img src="icon3.png" alt="Desarrollo">
                 <h2>Desarrollo</h2>
-                <p>Consulta la sección de desarrollo.</p>
+                <p>
+                    Consulta la sección de desarrollo.
+                </p>
             </a>
-
         </div>
-
     </main>
-
 </body>
 </html>

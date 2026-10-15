@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Práctica | OHMFÓBICO</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<main class="contenedor practica">
+
+    <header class="practica-header">
+        <a href="index.html" class="volver">← Volver al inicio</a>
+        <h1>LABORATORIO OHM</h1>
+        <p class="descripcion">Resuelve circuitos y demuestra lo que sabes.</p>
+    </header>
+
+    <section class="niveles">
+        <button class="nivel activo" data-nivel="facil">Fácil</button>
+        <button class="nivel" data-nivel="medio">Medio</button>
+        <button class="nivel" data-nivel="dificil">Difícil</button>
+    </section>
+
+    <section class="panel-practica">
+
+        <div class="datos-ejercicio">
+            <span id="nivel-texto">NIVEL FÁCIL</span>
+            <span id="contador">Ejercicio 1</span>
+        </div>
+
+        <div id="circuito" class="circuito-visual"></div>
+
+        <div class="pregunta">
+            <h2 id="pregunta-titulo">Calcula el valor desconocido</h2>
+            <p id="pregunta-texto"></p>
+        </div>
+
+        <form id="formulario">
+            <label for="respuesta">Tu respuesta</label>
+
+            <div class="entrada-respuesta">
+                <input
+                    type="number"
+                    id="respuesta"
+                    step="any"
+                    placeholder="Escribe el resultado"
+                    required
+                >
+
+                <span id="unidad">Ω</span>
+            </div>
+
+            <div class="botones-practica">
+                <button type="submit" class="btn-enviar">
+                    Enviar respuesta
+                </button>
+
+                <button type="button" id="ver-respuesta" class="btn-solucion">
+                    Ver respuesta
+                </button>
+            </div>
+        </form>
+
+        <div id="resultado" class="resultado-practica" aria-live="polite"></div>
+
+        <button id="siguiente" class="btn-siguiente" hidden>
+            Siguiente ejercicio →
+        </button>
+
+    </section>
+
+    <section class="ayuda-ohm">
+        <h2>Recordatorio: ley de Ohm</h2>
+
+        <div class="formulas">
+            <article class="tarjeta">
+                <h3>Voltaje</h3>
+                <p class="formula-pequena">V = I × R</p>
+            </article>
+
+            <article class="tarjeta">
+                <h3>Corriente</h3>
+                <p class="formula-pequena">I = V / R</p>
+            </article>
+
+            <article class="tarjeta">
+                <h3>Resistencia</h3>
+                <p class="formula-pequena">R = V / I</p>
+            </article>
+        </div>
+    </section>
+
+    <footer class="pie">
+        <p>OHMFÓBICO · Aprende practicando</p>
+    </footer>
+
+</main>
+
+<script>
+const circuito = document.getElementById("circuito");
+const preguntaTitulo = document.getElementById("pregunta-titulo");
+const preguntaTexto = document.getElementById("pregunta-texto");
+const respuesta = document.getElementById("respuesta");
+const unidad = document.getElementById("unidad");
+const resultado = document.getElementById("resultado");
+const siguiente = document.getElementById("siguiente");
+const contador = document.getElementById("contador");
+const nivelTexto = document.getElementById("nivel-texto");
+const formulario = document.getElementById("formulario");
+
+let nivel = "facil";
+let numero = 0;
+let ejercicio;
+let respondido = false;
+
+const nombres = {
+    facil: "FÁCIL",
+    medio: "MEDIO",
+    dificil: "DIFÍCIL"
+};
+
+function aleatorio(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function elegir(array) {
+    return array[aleatorio(0, array.length - 1)];
+}
+
+function generarEjercicio() {
+    numero++;
+    respondido = false;
+
+    resultado.innerHTML = "";
+    resultado.className = "resultado-practica";
+    siguiente.hidden = true;
+    respuesta.disabled = false;
+    respuesta.value = "";
+    respuesta.focus();
+
+    let V, R, I, desconocido;
+
+    if (nivel === "facil") {
+        R = elegir([10, 20, 30, 40, 50]);
+        I = elegir([1, 2, 3, 4, 5]);
+        desconocido = elegir(["V", "I", "R"]);
+    } else if (nivel === "medio") {
+        R = elegir([15, 25, 40, 50, 75, 100]);
+        I = elegir([0.2, 0.4, 0.5, 0.8, 1.2, 1.5, 2]);
+        desconocido = elegir(["V", "I", "R"]);
+    } else {
+        R = elegir([12, 24, 36, 48, 68, 120, 150]);
+        I = elegir([0.15, 0.25, 0.35, 0.6, 0.75, 1.25, 1.5]);
+        desconocido = elegir(["V", "I", "R"]);
+    }
+
+    V = R * I;
+
+    ejercicio = { V, R, I, desconocido };
+
+    let valores = { V, R, I };
+    let unidades = { V: "V", R: "Ω", I: "A" };
+    let nombresMagnitud = {
+        V: "voltaje",
+        R: "resistencia",
+        I: "corriente"
+    };
+
+    unidad.textContent = unidades[desconocido];
+
+    preguntaTitulo.textContent =
+        "Calcula el " + nombresMagnitud[desconocido];
+
+    preguntaTexto.textContent =
+        "¿Cuál es el valor de " + nombresMagnitud[desconocido] +
+        " en la resistencia del circuito?";
+
+    let datos = ["V", "R", "I"].map(clave => {
+        if (clave === desconocido) {
+            return clave + " = ?";
+        }
+
+        return clave + " = " + valores[clave] + " " + unidades[clave];
+    });
+
+    contador.textContent = "Ejercicio " + numero;
+    nivelTexto.textContent = "NIVEL " + nombres[nivel];
+
+    dibujarCircuito(datos, desconocido);
+}
+
+function dibujarCircuito(datos, desconocido) {
+    let desorden = Math.random() < 0.5;
+    let desplazamiento = aleatorio(-10, 10);
+    let posicionR = desorden ? 250 : 180;
+    let posicionLED = desorden ? 180 : 250;
+
+    circuito.innerHTML = `
+        <svg viewBox="0 0 340 240" role="img"
+             aria-label="Circuito esquemático con batería, resistencia y LED">
+
+            <path d="M 75 55 H ${posicionR - 35}
+                     M ${posicionR + 35} 55 H 290
+                     V 180 H 75 V 55"
+                  fill="none" stroke="#7dd3fc" stroke-width="3"/>
+
+            <g>
+                <line x1="65" y1="95" x2="85" y2="95"
+                      stroke="#facc15" stroke-width="4"/>
+                <line x1="70" y1="120" x2="80" y2="120"
+                      stroke="#facc15" stroke-width="4"/>
+                <line x1="75" y1="55" x2="75" y2="95"
+                      stroke="#7dd3fc" stroke-width="3"/>
+                <line x1="75" y1="120" x2="75" y2="180"
+                      stroke="#7dd3fc" stroke-width="3"/>
+                <text x="45" y="85" fill="#facc15" font-size="12">+</text>
+                <text x="45" y="135" fill="#facc15" font-size="12">−</text>
+                <text x="18" y="155" fill="white" font-size="12">Batería</text>
+            </g>
+
+            <g>
+                <rect x="${posicionR - 35}" y="40"
+                      width="70" height="30" rx="5"
+                      fill="${desconocido === "R" ? "#7c3aed" : "#263b50"}"
+                      stroke="${desconocido === "R" ? "#c4b5fd" : "#7dd3fc"}"
+                      stroke-width="2"/>
+
+                <text x="${posicionR}" y="59"
+                      text-anchor="middle" fill="white"
+                      font-size="13" font-weight="bold">R</text>
+
+                <text x="${posicionR}" y="28"
+                      text-anchor="middle" fill="white" font-size="12">
+                    ${datos.find(d => d.startsWith("R ="))}
+                </text>
+            </g>
+
+            <g>
+                <circle cx="${posicionLED}" cy="180" r="17"
+                        fill="#263b50" stroke="#fb7185" stroke-width="2"/>
+
+                <path d="M ${posicionLED - 7} 171 L ${posicionLED + 7} 180
+                         L ${posicionLED - 7} 189 Z"
+                      fill="#fb7185"/>
+
+                <line x1="${posicionLED + 7}" y1="171"
+                      x2="${posicionLED + 7}" y2="189"
+                      stroke="#fb7185" stroke-width="2"/>
+
+                <path d="M ${posicionLED + 10} 159 l 8 -8
+                         M ${posicionLED + 14} 165 l 8 -8"
+                      stroke="#fb7185" stroke-width="2"/>
+
+                <text x="${posicionLED}" y="215"
+                      text-anchor="middle" fill="white" font-size="12">LED</text>
+            </g>
+
+            <text x="170" y="232" text-anchor="middle"
+                  fill="#bfc7d5" font-size="10">
+                Esquema de práctica
+            </text>
+        </svg>
+
+        <div class="valores-circuito">
+            ${datos.map(dato => {
+                let clave = dato.split(" = ")[0];
+                let oculto = clave === desconocido;
+
+                return `
+                    <span class="${oculto ? "dato-oculto" : "dato"}">
+                        ${dato}
+                    </span>
+                `;
+            }).join("")}
+        </div>
+    `;
+}
+
+function mostrarSolucion(correcta) {
+    let { V, R, I, desconocido } = ejercicio;
+    let calculo = "";
+
+    if (desconocido === "V") {
+        calculo = `V = I × R = ${I} × ${R} = ${V} V`;
+    } else if (desconocido === "I") {
+        calculo = `I = V / R = ${V} / ${R} = ${I} A`;
+    } else {
+        calculo = `R = V / I = ${V} / ${I} = ${R} Ω`;
+    }
+
+    resultado.className = "resultado-practica solucion";
+    resultado.innerHTML = `
+        <h3>Solución del ejercicio</h3>
+        <p>La fórmula aplicada es:</p>
+        <p class="calculo">${calculo}</p>
+        <p>Respuesta: <strong>${ejercicio[desconocido]} ${
+            {V:"V", I:"A", R:"Ω"}[desconocido]
+        }</strong></p>
+    `;
+
+    if (correcta) {
+        resultado.className = "resultado-practica correcto";
+    }
+}
+
+formulario.addEventListener("submit", function(evento) {
+    evento.preventDefault();
+
+    if (respondido) return;
+
+    let valor = Number(respuesta.value);
+    let correcta = ejercicio[ejercicio.desconocido];
+
+    if (respuesta.value.trim() === "" || !Number.isFinite(valor)) {
+        resultado.textContent = "Escribe un número válido.";
+        return;
+    }
+
+    respondido = true;
+    respuesta.disabled = true;
+
+    if (Math.abs(valor - correcta) < 0.011) {
+        mostrarSolucion(true);
+        resultado.innerHTML =
+            "<h3>¡Correcto!</h3>" + resultado.innerHTML;
+    } else {
+        resultado.className = "resultado-practica incorrecto";
+        resultado.innerHTML = `
+            <h3>Respuesta incorrecta</h3>
+            <p>Tu resultado: ${valor}</p>
+            <p>Revisa la fórmula e inténtalo en el siguiente ejercicio.</p>
+        `;
+    }
+
+    siguiente.hidden = false;
+});
+
+document.getElementById("ver-respuesta").addEventListener("click", function() {
+    if (respondido) return;
+
+    respondido = true;
+    respuesta.disabled = true;
+    mostrarSolucion(false);
+    siguiente.hidden = false;
+});
+
+siguiente.addEventListener("click", generarEjercicio);
+
+document.querySelectorAll(".nivel").forEach(boton => {
+    boton.addEventListener("click", function() {
+        document.querySelector(".nivel.activo").classList.remove("activo");
+        this.classList.add("activo");
+
+        nivel = this.dataset.nivel;
+        numero = 0;
+        generarEjercicio();
+    });
+});
+
+generarEjercicio();
+</script>
+
+</body>
+</html>

@@ -5,13 +5,16 @@
 }
 
 
+html {
+    min-height: 100%;
+    background: #101820;
+}
+
 body {
     min-height: 100vh;
-
     font-family: Arial, sans-serif;
 
     background: linear-gradient(135deg, #101820, #1b2a41);
-
     color: white;
 
     display: flex;

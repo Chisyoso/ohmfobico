@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>OHMFÓBICO - Práctica</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+    <main class="practica">
+
+        <!-- ENCABEZADO -->
+
+        <div class="practica-header">
+
+            <a href="index.html" class="volver">
+                ← Volver
+            </a>
+
+            <h1>Laboratorio de Ohm</h1>
+
+            <p class="descripcion">
+                Resuelve los circuitos generados por el motor de OHMFÓBICO.
+            </p>
+
+        </div>
+
+
+        <!-- NIVELES -->
+
+        <div class="niveles">
+
+            <button
+                class="nivel activo"
+                id="nivel-1"
+                onclick="cambiarDificultad(1)">
+                Fácil
+            </button>
+
+            <button
+                class="nivel"
+                id="nivel-2"
+                onclick="cambiarDificultad(2)">
+                Medio
+            </button>
+
+            <button
+                class="nivel"
+                id="nivel-3"
+                onclick="cambiarDificultad(3)">
+                Difícil
+            </button>
+
+        </div>
+
+
+        <!-- PANEL PRINCIPAL -->
+
+        <section class="panel-practica">
+
+
+            <!-- INFORMACIÓN DEL EJERCICIO -->
+
+            <div class="datos-ejercicio">
+
+                <span id="dificultad">
+                    Dificultad: Fácil
+                </span>
+
+                <span id="estado">
+                    Motor C++ conectado
+                </span>
+
+            </div>
+
+
+            <!-- CIRCUITO -->
+
+            <div class="circuito-visual">
+
+                <div id="circuito">
+
+                    <p>
+                        Generando circuito...
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- PREGUNTAS -->
+
+            <div id="preguntas">
+
+                <div class="pregunta">
+
+                    <h2>
+                        Preguntas
+                    </h2>
+
+                    <p>
+                        Esperando al motor C++...
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- RESULTADO -->
+
+            <div
+                id="resultado"
+                class="resultado-practica">
+            </div>
+
+
+        </section>
+
+
+        <!-- AYUDA -->
+
+        <section class="ayuda-ohm">
+
+            <h2>
+                Ley de Ohm
+            </h2>
+
+            <div class="seccion">
+
+                <p>
+                    La relación básica entre voltaje, corriente y resistencia
+                    se expresa mediante:
+                </p>
+
+                <div class="formula">
+                    V = I × R
+                </div>
+
+                <div class="magnitudes">
+
+                    <div class="tarjeta">
+
+                        <div class="simbolo">
+                            V
+                        </div>
+
+                        <h3>
+                            Voltaje
+                        </h3>
+
+                        <p>
+                            Se mide en voltios (V).
+                        </p>
+
+                    </div>
+
+
+                    <div class="tarjeta">
+
+                        <div class="simbolo">
+                            I
+                        </div>
+
+                        <h3>
+                            Corriente
+                        </h3>
+
+                        <p>
+                            Se mide en amperios (A).
+                        </p>
+
+                    </div>
+
+
+                    <div class="tarjeta">
+
+                        <div class="simbolo">
+                            R
+                        </div>
+
+                        <h3>
+                            Resistencia
+                        </h3>
+
+                        <p>
+                            Se mide en ohmios (Ω).
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- PIE -->
+
+        <footer class="pie">
+
+            <p>
+                OHMFÓBICO
+            </p>
+
+            <p>
+                Motor de simulación de circuitos eléctricos
+            </p>
+
+        </footer>
+
+
+    </main>
+
+
+    <!-- MOTOR JAVASCRIPT -->
+
+    <script src="prac.js"></script>
+
+</body>
+
+</html>

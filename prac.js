@@ -1,4 +1,4 @@
-const MOTOR = "http://TU_IP:8081";
+const MOTOR = "http://209.209.40.179:8081";
 
 let ejercicio = null;
 let preguntaActual = 0;

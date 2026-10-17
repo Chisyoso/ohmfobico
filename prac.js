@@ -769,7 +769,7 @@ function crearBloquePregunta(pregunta, indice) {
 }
 
 function alternarValores() {
-    mostrandoValores = !mostrandoValores;
+    
     if (botonValores) {
         botonValores.textContent = mostrandoValores
             ? "Ocultar valores del circuito"

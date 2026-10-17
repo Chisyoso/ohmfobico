@@ -16,20 +16,33 @@
     </p>
 </div>
 <div class="niveles">
-    <button class="nivel activo" id="nivel-1" onclick="cambiarDificultad(1)">
+    <button
+        class="nivel activo"
+        id="nivel-1"
+        onclick="cambiarDificultad(1)">
         Fácil
     </button>
-    <button class="nivel" id="nivel-2" onclick="cambiarDificultad(2)">
+    <button
+        class="nivel"
+        id="nivel-2"
+        onclick="cambiarDificultad(2)">
         Medio
     </button>
-    <button class="nivel" id="nivel-3" onclick="cambiarDificultad(3)">
+    <button
+        class="nivel"
+        id="nivel-3"
+        onclick="cambiarDificultad(3)">
         Difícil
     </button>
 </div>
 <section class="panel-practica">
     <div class="datos-ejercicio">
-        <span id="dificultad">Dificultad: Fácil</span>
-        <span id="estado">Motor JavaScript activo</span>
+        <span id="dificultad">
+            Dificultad: Fácil
+        </span>
+        <span id="estado">
+            Preparando circuito...
+        </span>
     </div>
     <div class="circuito-visual">
         <div id="circuito">
@@ -39,17 +52,100 @@
     <div id="preguntas">
         <div class="pregunta">
             <h2>Preguntas</h2>
-            <p>Generando ejercicio...</p>
+            <p>
+                Generando ejercicio...
+            </p>
         </div>
     </div>
-    <div id="resultado" class="resultado-practica"></div>
+    <div
+        id="resultado"
+        class="resultado-practica">
+    </div>
 </section>
-
+<section class="ayuda-ohm">
+    <h2>Ley de Ohm</h2>
+    <div class="seccion">
+        <p>
+            La Ley de Ohm relaciona el voltaje,
+            la corriente y la resistencia.
+        </p>
+        <div class="formula">
+            V = I × R
+        </div>
+        <div class="magnitudes">
+            <div class="tarjeta">
+                <div class="simbolo">
+                    V
+                </div>
+                <h3>
+                    Voltaje
+                </h3>
+                <p>
+                    Se mide en voltios (V).
+                </p>
+            </div>
+            <div class="tarjeta">
+                <div class="simbolo">
+                    I
+                </div>
+                <h3>
+                    Corriente
+                </h3>
+                <p>
+                    Se mide en amperios (A).
+                </p>
+            </div>
+            <div class="tarjeta">
+                <div class="simbolo">
+                    R
+                </div>
+                <h3>
+                    Resistencia
+                </h3>
+                <p>
+                    Se mide en ohmios (Ω).
+                </p>
+            </div>
+        </div>
+        <div class="formula">
+            P = V × I
+        </div>
+        <div class="magnitudes">
+            <div class="tarjeta">
+                <div class="simbolo">
+                    P
+                </div>
+                <h3>
+                    Potencia
+                </h3>
+                <p>
+                    Se mide en vatios (W).
+                </p>
+            </div>
+            <div class="tarjeta">
+                <div class="simbolo">
+                    Ω
+                </div>
+                <h3>
+                    Resistencia equivalente
+                </h3>
+                <p>
+                    Representa la resistencia total
+                    del circuito.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
 <footer class="pie">
-    <p>OHMFÓBICO</p>
-    <p>Laboratorio de simulación de circuitos eléctricos</p>
+    <p>
+        OHMFÓBICO
+    </p>
+    <p>
+        Laboratorio de simulación de circuitos eléctricos
+    </p>
 </footer>
 </main>
-<script src="des.js"></script>
+<script src="prac.js"></script>
 </body>
 </html>

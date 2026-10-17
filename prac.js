@@ -770,11 +770,7 @@ function crearBloquePregunta(pregunta, indice) {
 
 function alternarValores() {
     
-    if (botonValores) {
-        botonValores.textContent = mostrandoValores
-            ? "Ocultar valores del circuito"
-            : "Mostrar valores en el circuito";
-    }
+  
     dibujarCircuito();
 }
 
@@ -798,15 +794,12 @@ function mostrarPreguntas() {
 
     const acciones = crear("div", "acciones-practica");
 
-    botonValores = crear("button", "btn-secundario", "Mostrar valores en el circuito");
-    botonValores.type = "button";
-    botonValores.onclick = alternarValores;
-
+    
     const siguiente = crear("button", "btn-siguiente", "Generar otro circuito");
     siguiente.type = "button";
     siguiente.onclick = () => generarEjercicio(dificultadActual);
 
-    acciones.appendChild(botonValores);
+    
     acciones.appendChild(siguiente);
     preguntas.appendChild(acciones);
 }

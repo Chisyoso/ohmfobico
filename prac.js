@@ -1,9 +1,5 @@
-
-const MOTOR = "http://209.209.40.179:10058";
-
 let ejercicio = null;
 let dificultadActual = 1;
-let comprobadas = new Set();
 
 const circuito = document.getElementById("circuito");
 const preguntas = document.getElementById("preguntas");
@@ -11,344 +7,1127 @@ const resultado = document.getElementById("resultado");
 const estado = document.getElementById("estado");
 const dificultadTexto = document.getElementById("dificultad");
 
-async function pedir(ruta, datos = null) {
-    const opciones = {
-        method: datos ? "POST" : "GET",
-        headers: {}
-    };
 
-    if (datos) {
-        opciones.headers["Content-Type"] = "application/json";
-        opciones.body = JSON.stringify(datos);
-    }
+// ============================================================
+// UTILIDADES
+// ============================================================
 
-    const respuesta = await fetch(MOTOR + ruta, opciones);
-    const texto = await respuesta.text();
-
-    if (!respuesta.ok) {
-        throw new Error("HTTP " + respuesta.status + ": " + texto);
-    }
-
-    try {
-        return JSON.parse(texto);
-    } catch {
-        throw new Error("La API no devolvió JSON válido: " + texto.slice(0, 150));
-    }
+function aleatorio(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function mostrarEstado(texto) {
-    if (estado) estado.textContent = texto;
+function redondear(numero) {
+    return Math.round(numero * 10000) / 10000;
 }
 
-function mostrarResultado(texto, clase = "") {
-    resultado.textContent = texto;
-    resultado.className = "resultado-practica";
-
-    if (clase) resultado.classList.add(clase);
+function numeroAleatorioDecimal(min, max) {
+    return Math.random() * (max - min) + min;
 }
 
-async function comprobarConexion() {
-    mostrarEstado("Conectando...");
 
-    try {
-        const datos = await pedir("/");
+// ============================================================
+// GENERADOR DE COMPONENTES
+// ============================================================
 
-        if (datos.ok) {
-            mostrarEstado("Motor C++ conectado");
-        } else {
-            mostrarEstado("API respondió");
+function generarComponentes(dificultad) {
+
+    const componentes = [];
+
+    // Batería principal
+    const bateria = aleatorio(6, 12);
+
+    componentes.push({
+        id: 0,
+        tipo: "bateria",
+        v: bateria,
+        r: 0,
+        nodoA: 0,
+        nodoB: 1
+    });
+
+
+    // Cantidad de resistencias
+    let cantidadResistencias;
+
+    if (dificultad === 1) {
+        cantidadResistencias = 2;
+    }
+    else if (dificultad === 2) {
+        cantidadResistencias = 3;
+    }
+    else {
+        cantidadResistencias = 4;
+    }
+
+
+    for (let i = 1; i <= cantidadResistencias; i++) {
+
+        componentes.push({
+            id: i,
+            tipo: "resistencia",
+            v: 0,
+            r: aleatorio(10, 100),
+            nodoA: i,
+            nodoB: i + 1
+        });
+    }
+
+
+    // LEDs a partir de dificultad 2
+    if (dificultad >= 2) {
+
+        componentes.push({
+            id: componentes.length,
+            tipo: "led",
+            v: 1.8,
+            r: 0,
+            nodoA: componentes.length,
+            nodoB: componentes.length + 1
+        });
+    }
+
+
+    // Segunda batería en difícil
+    if (dificultad >= 3) {
+
+        componentes.push({
+            id: componentes.length,
+            tipo: "bateria",
+            v: aleatorio(3, 9),
+            r: 0,
+            nodoA: componentes.length,
+            nodoB: componentes.length + 1
+        });
+    }
+
+    return componentes;
+}
+
+
+// ============================================================
+// RESISTENCIAS
+// ============================================================
+
+function obtenerResistencias(componentes) {
+
+    return componentes.filter(
+        componente => componente.tipo === "resistencia"
+    );
+}
+
+
+function resistenciaSerie(resistencias) {
+
+    let total = 0;
+
+    for (const resistencia of resistencias) {
+        total += resistencia.r;
+    }
+
+    return total;
+}
+
+
+function resistenciaParalelo(resistencias) {
+
+    let total = 0;
+
+    for (const resistencia of resistencias) {
+        total += 1 / resistencia.r;
+    }
+
+    return 1 / total;
+}
+
+
+// ============================================================
+// TIPO DE CIRCUITO
+// ============================================================
+
+function obtenerTipoCircuito(dificultad) {
+
+    if (dificultad === 1) {
+
+        if (Math.random() < 0.5) {
+            return "serie";
         }
-    } catch (error) {
-        mostrarEstado("Sin conexión");
-        console.error("Error de conexión:", error);
+
+        return "paralelo";
     }
+
+
+    if (dificultad === 2) {
+
+        const tipos = [
+            "serie",
+            "paralelo",
+            "mixto"
+        ];
+
+        return tipos[aleatorio(0, tipos.length - 1)];
+    }
+
+
+    const tipos = [
+        "serie",
+        "paralelo",
+        "mixto"
+    ];
+
+    return tipos[aleatorio(0, tipos.length - 1)];
 }
 
-async function generarEjercicio(dificultad = 1) {
+
+// ============================================================
+// CALCULAR CIRCUITO
+// ============================================================
+
+function calcularCircuito(componentes, tipo, dificultad) {
+
+    const preguntas = [];
+
+    const bateria = componentes.find(
+        componente => componente.tipo === "bateria"
+    );
+
+    const resistencias = obtenerResistencias(componentes);
+
+    let voltaje = bateria.v;
+
+
+    // --------------------------------------------------------
+    // LED
+    // --------------------------------------------------------
+
+    const leds = componentes.filter(
+        componente => componente.tipo === "led"
+    );
+
+    for (const led of leds) {
+        voltaje -= led.v;
+    }
+
+    if (voltaje < 0) {
+        voltaje = 0;
+    }
+
+
+    // --------------------------------------------------------
+    // SERIE
+    // --------------------------------------------------------
+
+    if (tipo === "serie") {
+
+        const resistenciaTotal =
+            resistenciaSerie(resistencias);
+
+        const corriente =
+            voltaje / resistenciaTotal;
+
+
+        for (const resistencia of resistencias) {
+
+            const voltajeResistencia =
+                corriente * resistencia.r;
+
+            resistencia.v =
+                redondear(voltajeResistencia);
+        }
+
+
+        // Pregunta de corriente
+        const resistenciaPregunta =
+            resistencias[aleatorio(0, resistencias.length - 1)];
+
+        preguntas.push({
+            id: resistenciaPregunta.id,
+            tipo: "corriente",
+            respuesta: redondear(corriente)
+        });
+
+
+        // Pregunta de voltaje
+        if (dificultad >= 2) {
+
+            const resistenciaVoltaje =
+                resistencias[aleatorio(0, resistencias.length - 1)];
+
+            preguntas.push({
+                id: resistenciaVoltaje.id,
+                tipo: "voltaje",
+                respuesta: redondear(resistenciaVoltaje.v)
+            });
+        }
+
+
+        // Resistencia equivalente
+        if (dificultad >= 3) {
+
+            preguntas.push({
+                id: 0,
+                tipo: "resistencia_equivalente",
+                respuesta: redondear(resistenciaTotal)
+            });
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // PARALELO
+    // --------------------------------------------------------
+
+    else if (tipo === "paralelo") {
+
+        const resistenciaTotal =
+            resistenciaParalelo(resistencias);
+
+
+        for (const resistencia of resistencias) {
+
+            resistencia.v =
+                redondear(voltaje);
+        }
+
+
+        const resistenciaPregunta =
+            resistencias[aleatorio(0, resistencias.length - 1)];
+
+
+        const corriente =
+            voltaje / resistenciaPregunta.r;
+
+
+        preguntas.push({
+            id: resistenciaPregunta.id,
+            tipo: "corriente",
+            respuesta: redondear(corriente)
+        });
+
+
+        if (dificultad >= 2) {
+
+            const otra =
+                resistencias[aleatorio(0, resistencias.length - 1)];
+
+            preguntas.push({
+                id: otra.id,
+                tipo: "voltaje",
+                respuesta: redondear(voltaje)
+            });
+        }
+
+
+        if (dificultad >= 3) {
+
+            preguntas.push({
+                id: 0,
+                tipo: "resistencia_equivalente",
+                respuesta: redondear(resistenciaTotal)
+            });
+        }
+    }
+
+
+    // --------------------------------------------------------
+    // MIXTO
+    // --------------------------------------------------------
+
+    else {
+
+        /*
+            R1 está en serie con:
+
+                    R2
+                    ||
+                    R3
+
+            Es decir:
+
+            batería -- R1 --+-- R2 --+
+                           |         |
+                           +-- R3 --+
+        */
+
+        const r1 = resistencias[0];
+        const r2 = resistencias[1];
+        const r3 = resistencias[2];
+
+
+        const paralelo =
+            1 / ((1 / r2.r) + (1 / r3.r));
+
+
+        const equivalente =
+            r1.r + paralelo;
+
+
+        const corrienteTotal =
+            voltaje / equivalente;
+
+
+        const voltajeR1 =
+            corrienteTotal * r1.r;
+
+
+        const voltajeParalelo =
+            voltaje - voltajeR1;
+
+
+        const corrienteR2 =
+            voltajeParalelo / r2.r;
+
+
+        const corrienteR3 =
+            voltajeParalelo / r3.r;
+
+
+        r1.v = redondear(voltajeR1);
+        r2.v = redondear(voltajeParalelo);
+        r3.v = redondear(voltajeParalelo);
+
+
+        preguntas.push({
+            id: r1.id,
+            tipo: "corriente",
+            respuesta: redondear(corrienteTotal)
+        });
+
+
+        preguntas.push({
+            id: r2.id,
+            tipo: "corriente",
+            respuesta: redondear(corrienteR2)
+        });
+
+
+        if (dificultad >= 2) {
+
+            preguntas.push({
+                id: r3.id,
+                tipo: "voltaje",
+                respuesta: redondear(voltajeParalelo)
+            });
+        }
+
+
+        if (dificultad >= 3) {
+
+            preguntas.push({
+                id: 0,
+                tipo: "resistencia_equivalente",
+                respuesta: redondear(equivalente)
+            });
+        }
+    }
+
+
+    return preguntas;
+}
+
+
+// ============================================================
+// GENERAR EJERCICIO
+// ============================================================
+
+function generarEjercicio(dificultad = 1) {
+
     dificultadActual = Number(dificultad);
 
-    if (dificultadActual < 1 || dificultadActual > 3) {
+    if (
+        dificultadActual < 1 ||
+        dificultadActual > 3
+    ) {
         dificultadActual = 1;
     }
 
+
     actualizarNiveles();
+
+
+    const nombres = [
+        "",
+        "Fácil",
+        "Medio",
+        "Difícil"
+    ];
+
 
     dificultadTexto.textContent =
         "Dificultad: " +
-        ["", "Fácil", "Medio", "Difícil"][dificultadActual];
+        nombres[dificultadActual];
 
-    circuito.replaceChildren();
-    preguntas.replaceChildren();
 
-    const cargando = document.createElement("p");
-    cargando.textContent = "Generando circuito...";
-    circuito.appendChild(cargando);
+    mostrarEstado("Generando circuito...");
 
-    mostrarResultado("");
-    mostrarEstado("Generando...");
 
-    try {
-        ejercicio = await pedir("/generar", {
-            dificultad: dificultadActual
-        });
+    const componentes =
+        generarComponentes(dificultadActual);
 
-        if (!Array.isArray(ejercicio.componentes) ||
-            !Array.isArray(ejercicio.preguntas)) {
-            throw new Error("La API no envió los componentes o las preguntas.");
-        }
 
-        comprobadas.clear();
+    const tipo =
+        obtenerTipoCircuito(dificultadActual);
 
-        dibujarCircuito();
-        mostrarPreguntas();
 
-        mostrarEstado("Motor C++ conectado");
-        mostrarResultado("Ejercicio generado correctamente.");
-    } catch (error) {
-        ejercicio = null;
+    const preguntasGeneradas =
+        calcularCircuito(
+            componentes,
+            tipo,
+            dificultadActual
+        );
 
-        circuito.replaceChildren();
-        preguntas.replaceChildren();
 
-        const mensaje = document.createElement("p");
-        mensaje.textContent = "No se pudo generar el circuito.";
-        circuito.appendChild(mensaje);
+    ejercicio = {
 
-        mostrarEstado("Error de conexión");
-        mostrarResultado(error.message);
+        dificultad: dificultadActual,
 
-        console.error("Error al generar:", error);
-    }
+        tipo: tipo,
+
+        componentes: componentes,
+
+        preguntas: preguntasGeneradas
+    };
+
+
+    dibujarCircuito();
+
+    mostrarPreguntas();
+
+    mostrarEstado("Motor JavaScript activo");
+
+    mostrarResultado(
+        "Ejercicio generado correctamente."
+    );
 }
 
-function actualizarNiveles() {
-    for (let i = 1; i <= 3; i++) {
-        const boton = document.getElementById("nivel-" + i);
 
-        if (boton) {
-            boton.classList.toggle("activo", i === dificultadActual);
-        }
-    }
-}
+// ============================================================
+// NIVELES
+// ============================================================
 
 function cambiarDificultad(valor) {
+
     generarEjercicio(valor);
 }
 
-function dibujarCircuito() {
-    circuito.replaceChildren();
 
-    const contenedor = document.createElement("div");
-    contenedor.className = "circuito";
+function actualizarNiveles() {
 
-    ejercicio.componentes.forEach((componente, indice) => {
-        const elemento = document.createElement("div");
-        elemento.className = "componente";
+    for (let i = 1; i <= 3; i++) {
 
-        const simbolo = document.createElement("div");
-        simbolo.className = "simbolo-circuito";
+        const boton =
+            document.getElementById("nivel-" + i);
 
-        const nombre = document.createElement("strong");
-        const dato = document.createElement("small");
 
-        if (componente.tipo === "bateria") {
-            simbolo.textContent = "＋";
-            nombre.textContent = "Batería " + componente.id;
-            dato.textContent = componente.v + " V";
-        } else if (componente.tipo === "resistencia") {
-            simbolo.textContent = "Ω";
-            nombre.textContent = "R" + componente.id;
-            dato.textContent = componente.r + " Ω";
-        } else if (componente.tipo === "led") {
-            simbolo.textContent = "LED";
-            nombre.textContent = "LED " + componente.id;
-            dato.textContent = componente.v + " V";
-        } else {
-            simbolo.textContent = "?";
-            nombre.textContent = componente.tipo || "Componente";
-            dato.textContent = "";
+        if (boton) {
+
+            boton.classList.toggle(
+                "activo",
+                i === dificultadActual
+            );
         }
-
-        elemento.appendChild(simbolo);
-        elemento.appendChild(nombre);
-        elemento.appendChild(dato);
-
-        contenedor.appendChild(elemento);
-
-        if (indice < ejercicio.componentes.length - 1) {
-            const linea = document.createElement("span");
-            linea.className = "linea";
-            linea.textContent = "────";
-            contenedor.appendChild(linea);
-        }
-    });
-
-    circuito.appendChild(contenedor);
-
-    const nota = document.createElement("p");
-    nota.textContent =
-        "Representación de los componentes recibidos del motor C++.";
-    nota.style.color = "#bfc7d5";
-    nota.style.fontSize = "13px";
-    nota.style.marginTop = "12px";
-
-    circuito.appendChild(nota);
+    }
 }
 
+
+// ============================================================
+// DIBUJAR CIRCUITO
+// ============================================================
+
+function dibujarCircuito() {
+
+    circuito.replaceChildren();
+
+
+    const titulo =
+        document.createElement("h2");
+
+    titulo.textContent =
+        "Circuito " +
+        ejercicio.tipo;
+
+    titulo.style.color =
+        "#7dd3fc";
+
+    circuito.appendChild(titulo);
+
+
+    const contenedor =
+        document.createElement("div");
+
+    contenedor.className =
+        "circuito";
+
+
+    ejercicio.componentes.forEach(
+        (componente, indice) => {
+
+            const elemento =
+                document.createElement("div");
+
+            elemento.className =
+                "componente";
+
+
+            const simbolo =
+                document.createElement("div");
+
+            simbolo.className =
+                "simbolo-circuito";
+
+
+            const nombre =
+                document.createElement("strong");
+
+
+            const dato =
+                document.createElement("small");
+
+
+            if (
+                componente.tipo ===
+                "bateria"
+            ) {
+
+                simbolo.textContent =
+                    "＋";
+
+                nombre.textContent =
+                    "Batería " +
+                    componente.id;
+
+                dato.textContent =
+                    componente.v +
+                    " V";
+            }
+
+
+            else if (
+                componente.tipo ===
+                "resistencia"
+            ) {
+
+                simbolo.textContent =
+                    "Ω";
+
+                nombre.textContent =
+                    "R" +
+                    componente.id;
+
+                dato.textContent =
+                    componente.r +
+                    " Ω";
+            }
+
+
+            else if (
+                componente.tipo ===
+                "led"
+            ) {
+
+                simbolo.textContent =
+                    "LED";
+
+                nombre.textContent =
+                    "LED " +
+                    componente.id;
+
+                dato.textContent =
+                    componente.v +
+                    " V";
+            }
+
+
+            elemento.appendChild(
+                simbolo
+            );
+
+            elemento.appendChild(
+                nombre
+            );
+
+            elemento.appendChild(
+                dato
+            );
+
+
+            contenedor.appendChild(
+                elemento
+            );
+
+
+            if (
+                indice <
+                ejercicio.componentes.length - 1
+            ) {
+
+                const linea =
+                    document.createElement("span");
+
+                linea.className =
+                    "linea";
+
+                linea.textContent =
+                    "────";
+
+                contenedor.appendChild(
+                    linea
+                );
+            }
+        }
+    );
+
+
+    circuito.appendChild(
+        contenedor
+    );
+}
+
+
+// ============================================================
+// PREGUNTAS
+// ============================================================
+
 function mostrarPreguntas() {
+
     preguntas.replaceChildren();
 
-    if (ejercicio.preguntas.length === 0) {
-        const texto = document.createElement("p");
-        texto.textContent = "El motor no generó preguntas.";
-        preguntas.appendChild(texto);
+
+    const titulo =
+        document.createElement("h2");
+
+    titulo.textContent =
+        "Resuelve el ejercicio";
+
+    titulo.style.color =
+        "#7dd3fc";
+
+    preguntas.appendChild(
+        titulo
+    );
+
+
+    ejercicio.preguntas.forEach(
+        (pregunta, indice) => {
+
+            const bloque =
+                document.createElement("div");
+
+            bloque.className =
+                "pregunta";
+
+
+            const componente =
+                ejercicio.componentes.find(
+                    componente =>
+                        componente.id ===
+                        pregunta.id
+                );
+
+
+            const texto =
+                document.createElement("p");
+
+
+            if (
+                pregunta.tipo ===
+                "corriente"
+            ) {
+
+                texto.textContent =
+                    "¿Cuál es la corriente que pasa por " +
+                    nombreComponente(componente) +
+                    "?";
+            }
+
+
+            else if (
+                pregunta.tipo ===
+                "voltaje"
+            ) {
+
+                texto.textContent =
+                    "¿Cuál es el voltaje de " +
+                    nombreComponente(componente) +
+                    "?";
+            }
+
+
+            else if (
+                pregunta.tipo ===
+                "resistencia_equivalente"
+            ) {
+
+                texto.textContent =
+                    "¿Cuál es la resistencia equivalente del circuito?";
+            }
+
+
+            const entrada =
+                document.createElement("input");
+
+            entrada.type =
+                "number";
+
+            entrada.step =
+                "any";
+
+            entrada.placeholder =
+                "Respuesta";
+
+
+            const unidad =
+                document.createElement("span");
+
+            unidad.id =
+                "unidad";
+
+            unidad.textContent =
+                obtenerUnidad(
+                    pregunta.tipo
+                );
+
+
+            const entradaRespuesta =
+                document.createElement("div");
+
+            entradaRespuesta.className =
+                "entrada-respuesta";
+
+
+            entradaRespuesta.appendChild(
+                entrada
+            );
+
+            entradaRespuesta.appendChild(
+                unidad
+            );
+
+
+            const botones =
+                document.createElement("div");
+
+            botones.className =
+                "botones-practica";
+
+
+            const comprobar =
+                document.createElement("button");
+
+            comprobar.className =
+                "btn-enviar";
+
+            comprobar.textContent =
+                "Comprobar";
+
+
+            const mensaje =
+                document.createElement("div");
+
+            mensaje.className =
+                "resultado-practica";
+
+
+            comprobar.onclick =
+                function () {
+
+                    comprobarRespuesta(
+                        indice,
+                        entrada,
+                        mensaje,
+                        comprobar
+                    );
+                };
+
+
+            entrada.addEventListener(
+                "keydown",
+                function (evento) {
+
+                    if (
+                        evento.key ===
+                        "Enter"
+                    ) {
+
+                        comprobar.click();
+                    }
+                }
+            );
+
+
+            botones.appendChild(
+                comprobar
+            );
+
+
+            bloque.appendChild(
+                texto
+            );
+
+            bloque.appendChild(
+                entradaRespuesta
+            );
+
+            bloque.appendChild(
+                botones
+            );
+
+            bloque.appendChild(
+                mensaje
+            );
+
+
+            preguntas.appendChild(
+                bloque
+            );
+        }
+    );
+
+
+    const siguiente =
+        document.createElement("button");
+
+    siguiente.className =
+        "btn-siguiente";
+
+    siguiente.textContent =
+        "Generar otro circuito";
+
+
+    siguiente.onclick =
+        function () {
+
+            generarEjercicio(
+                dificultadActual
+            );
+        };
+
+
+    preguntas.appendChild(
+        siguiente
+    );
+}
+
+
+// ============================================================
+// COMPROBAR RESPUESTA
+// ============================================================
+
+function comprobarRespuesta(
+    numero,
+    entrada,
+    mensaje,
+    boton
+) {
+
+    if (
+        entrada.value.trim() === ""
+    ) {
+
+        mensaje.textContent =
+            "Escribe una respuesta.";
+
+        mensaje.className =
+            "resultado-practica incorrecto";
+
         return;
     }
 
-    const titulo = document.createElement("h2");
-    titulo.textContent = "Resuelve el ejercicio";
-    titulo.style.color = "#7dd3fc";
-    titulo.style.marginTop = "25px";
 
-    preguntas.appendChild(titulo);
+    const valor =
+        Number(entrada.value);
 
-    ejercicio.preguntas.forEach((pregunta, indice) => {
-        const bloque = document.createElement("div");
-        bloque.className = "pregunta";
 
-        const componente = ejercicio.componentes.find(
-            c => c.id === pregunta.id
+    if (
+        !Number.isFinite(valor)
+    ) {
+
+        mensaje.textContent =
+            "Introduce un número válido.";
+
+        mensaje.className =
+            "resultado-practica incorrecto";
+
+        return;
+    }
+
+
+    const correcta =
+        ejercicio.preguntas[
+            numero
+        ].respuesta;
+
+
+    const tolerancia =
+        Math.max(
+            0.000001,
+            Math.abs(correcta) * 0.01
         );
 
-        const texto = document.createElement("p");
 
-        if (pregunta.tipo === "corriente") {
-            texto.textContent = componente
-                ? "¿Qué corriente pasa por " +
-                  (componente.tipo === "resistencia"
-                    ? "R" + componente.id
-                    : componente.tipo + " " + componente.id) +
-                  "?"
-                : "¿Cuál es la corriente eléctrica?";
-        } else if (pregunta.tipo === "voltaje") {
-            texto.textContent = componente
-                ? "¿Qué voltaje tiene el componente " + componente.id + "?"
-                : "¿Cuál es el voltaje?";
-        } else if (pregunta.tipo === "resistencia_equivalente") {
-            texto.textContent = "¿Cuál es la resistencia equivalente del circuito?";
-        } else {
-            texto.textContent = "Calcula: " + pregunta.tipo;
-        }
+    const diferencia =
+        Math.abs(
+            valor - correcta
+        );
 
-        const formulario = document.createElement("div");
-        formulario.className = "entrada-respuesta";
 
-        const entrada = document.createElement("input");
-        entrada.type = "number";
-        entrada.step = "any";
-        entrada.placeholder = "Escribe tu respuesta";
-        entrada.setAttribute("aria-label", "Respuesta " + (indice + 1));
+    if (
+        diferencia <=
+        tolerancia
+    ) {
 
-        const unidad = document.createElement("span");
-        unidad.id = "unidad";
-        unidad.textContent = obtenerUnidad(pregunta.tipo);
+        mensaje.textContent =
+            "✓ ¡Correcto!";
 
-        formulario.appendChild(entrada);
-        formulario.appendChild(unidad);
+        mensaje.className =
+            "resultado-practica correcto";
 
-        const botones = document.createElement("div");
-        botones.className = "botones-practica";
+        entrada.classList.add(
+            "correcto"
+        );
 
-        const enviar = document.createElement("button");
-        enviar.className = "btn-enviar";
-        enviar.textContent = "Comprobar";
+        entrada.disabled =
+            true;
 
-        const estadoPregunta = document.createElement("p");
-        estadoPregunta.className = "estado-pregunta";
+        boton.disabled =
+            true;
+    }
 
-        enviar.onclick = async () => {
-            if (comprobadas.has(indice)) {
-                estadoPregunta.textContent = "Esta respuesta ya fue comprobada.";
-                return;
-            }
 
-            if (entrada.value.trim() === "") {
-                estadoPregunta.textContent = "Escribe una respuesta.";
-                return;
-            }
+    else {
 
-            const valor = Number(entrada.value);
+        mensaje.textContent =
+            "✗ Incorrecto. Inténtalo nuevamente.";
 
-            if (!Number.isFinite(valor)) {
-                estadoPregunta.textContent = "Introduce un número válido.";
-                return;
-            }
-
-            enviar.disabled = true;
-            estadoPregunta.textContent = "Comprobando con C++...";
-
-            try {
-                const datos = await pedir("/responder", {
-                    pregunta: indice,
-                    respuesta: valor
-                });
-
-                if (typeof datos.correcto !== "boolean") {
-                    throw new Error(
-                        datos.error || "Respuesta inesperada del motor."
-                    );
-                }
-
-                comprobadas.add(indice);
-
-                if (datos.correcto) {
-                    estadoPregunta.textContent = "✓ ¡Correcto!";
-                    estadoPregunta.className = "resultado-practica correcto";
-                    entrada.classList.add("correcto");
-                } else {
-                    estadoPregunta.textContent = "✗ Incorrecto. Inténtalo en el siguiente ejercicio.";
-                    estadoPregunta.className = "resultado-practica incorrecto";
-                    entrada.classList.add("incorrecto");
-                }
-
-                entrada.disabled = true;
-            } catch (error) {
-                estadoPregunta.textContent = "Error: " + error.message;
-                enviar.disabled = false;
-                console.error("Error al comprobar:", error);
-            }
-        };
-
-        entrada.addEventListener("keydown", event => {
-            if (event.key === "Enter") enviar.click();
-        });
-
-        botones.appendChild(enviar);
-
-        bloque.appendChild(texto);
-        bloque.appendChild(formulario);
-        bloque.appendChild(botones);
-        bloque.appendChild(estadoPregunta);
-
-        preguntas.appendChild(bloque);
-    });
-
-    const siguiente = document.createElement("button");
-    siguiente.className = "btn-siguiente";
-    siguiente.textContent = "Generar otro circuito";
-    siguiente.onclick = () => generarEjercicio(dificultadActual);
-
-    preguntas.appendChild(siguiente);
+        mensaje.className =
+            "resultado-practica incorrecto";
+    }
 }
 
+
+// ============================================================
+// NOMBRES
+// ============================================================
+
+function nombreComponente(componente) {
+
+    if (!componente) {
+        return "el circuito";
+    }
+
+
+    if (
+        componente.tipo ===
+        "resistencia"
+    ) {
+
+        return "R" +
+            componente.id;
+    }
+
+
+    if (
+        componente.tipo ===
+        "led"
+    ) {
+
+        return "el LED " +
+            componente.id;
+    }
+
+
+    if (
+        componente.tipo ===
+        "bateria"
+    ) {
+
+        return "la batería " +
+            componente.id;
+    }
+
+
+    return "el componente " +
+        componente.id;
+}
+
+
+// ============================================================
+// UNIDADES
+// ============================================================
+
 function obtenerUnidad(tipo) {
-    if (tipo === "corriente") return "A";
-    if (tipo === "voltaje") return "V";
-    if (tipo === "resistencia_equivalente") return "Ω";
+
+    if (
+        tipo ===
+        "corriente"
+    ) {
+        return "A";
+    }
+
+
+    if (
+        tipo ===
+        "voltaje"
+    ) {
+        return "V";
+    }
+
+
+    if (
+        tipo ===
+        "resistencia_equivalente"
+    ) {
+        return "Ω";
+    }
+
+
     return "";
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    comprobarConexion();
-    generarEjercicio(1);
-});
+
+// ============================================================
+// RESULTADOS
+// ============================================================
+
+function mostrarResultado(
+    texto,
+    clase = ""
+) {
+
+    resultado.textContent =
+        texto;
+
+    resultado.className =
+        "resultado-practica";
+
+
+    if (clase) {
+
+        resultado.classList.add(
+            clase
+        );
+    }
+}
+
+
+function mostrarEstado(texto) {
+
+    if (estado) {
+
+        estado.textContent =
+            texto;
+    }
+}
+
+
+// ============================================================
+// INICIO
+// ============================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    function () {
+
+        generarEjercicio(1);
+
+    }
+);
